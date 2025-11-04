@@ -10,25 +10,34 @@ export function ChainEditor() {
   const chainRef = useRef<THREE.Group>(null)
   const { chainStructure } = useEditorStore()
 
-  // Generate slot positions along a curve
+  // Generate slot positions along a circular necklace shape
   const slotPositions = useMemo(() => {
-    const { chainMeta } = chainStructure
+    const beadCount = chainStructure.beads.length
     const positions: THREE.Vector3[] = []
-    const totalSlots = chainMeta.maxBeads
-    const spacing = chainMeta.slotSpacing / 10 // Convert to Three.js units
 
-    // Create a simple catenary curve for natural chain drape
+    // If no beads, create preview slots
+    const totalSlots = beadCount > 0 ? beadCount : 16
+
+    // Necklace dimensions - elliptical shape
+    const radiusX = 2.0 // Horizontal radius
+    const radiusY = 2.5 // Vertical radius (taller to look like a necklace)
+    const offsetY = 0.3 // Offset upward slightly
+
+    // Create a circular/elliptical necklace shape
     for (let i = 0; i < totalSlots; i++) {
-      const t = (i / (totalSlots - 1)) * 2 - 1 // -1 to 1
-      const x = t * 3 // Spread horizontally
-      const y = -Math.pow(t, 2) * 0.5 // Catenary curve (parabola approximation)
+      // Angle around the circle (0 to 2π)
+      const angle = (i / totalSlots) * Math.PI * 2
+
+      // Position on ellipse
+      const x = Math.cos(angle) * radiusX
+      const y = Math.sin(angle) * radiusY - offsetY // Offset downward for necklace look
       const z = 0
 
       positions.push(new THREE.Vector3(x, y, z))
     }
 
     return positions
-  }, [chainStructure.chainMeta])
+  }, [chainStructure.beads.length])
 
   // Gentle rotation animation
   useFrame((state) => {
@@ -48,11 +57,12 @@ export function ChainEditor() {
       )}
 
       {/* Beads */}
-      {chainStructure.beads.map((bead, index) => {
-        const position = slotPositions[bead.positionIndex] || slotPositions[index]
+      {chainStructure.beads.map((bead, arrayIndex) => {
+        // Use array index for positioning to ensure proper spacing
+        const position = slotPositions[arrayIndex] || new THREE.Vector3(0, 0, 0)
         return (
           <BeadMesh
-            key={`${bead.catalogId}-${bead.positionIndex}`}
+            key={`${bead.catalogId}-${bead.positionIndex}-${arrayIndex}`}
             bead={bead}
             position={position}
             index={bead.positionIndex}
@@ -65,7 +75,8 @@ export function ChainEditor() {
 
 function ChainWire({ positions }: { positions: THREE.Vector3[] }) {
   const points = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3(positions)
+    // Create a closed curve for necklace
+    const curve = new THREE.CatmullRomCurve3(positions, true) // true = closed curve
     return curve.getPoints(200)
   }, [positions])
 
@@ -87,7 +98,7 @@ function ChainWire({ positions }: { positions: THREE.Vector3[] }) {
 function SlotIndicators({ positions }: { positions: THREE.Vector3[] }) {
   return (
     <>
-      {positions.slice(0, 10).map((pos, i) => (
+      {positions.map((pos, i) => (
         <mesh key={i} position={pos}>
           <sphereGeometry args={[0.05, 8, 8]} />
           <meshBasicMaterial
