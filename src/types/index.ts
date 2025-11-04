@@ -33,6 +33,13 @@ export type BeadShape =
   | 'flower'
   | 'custom'
 
+export type ChainStyle =
+  | 'simple'      // 简单圆管
+  | 'braided'     // 编织链
+  | 'link'        // 金属环链
+  | 'rope'        // 绳索链
+  | 'snake'       // 蛇骨链
+
 export interface BeadInChain {
   catalogId: string
   colorVariant?: string
@@ -48,6 +55,7 @@ export interface ChainMeta {
   length: number
   maxBeads: number
   slotSpacing: number
+  chainStyle?: ChainStyle
 }
 
 export interface ChainStructure {

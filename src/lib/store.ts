@@ -1,11 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Bead, BeadInChain, ChainStructure } from '@/types'
+import * as THREE from 'three'
+import { calculateChainHeight } from './bead-utils'
 
 interface EditorState {
   // Current design
   chainStructure: ChainStructure
   selectedBeadIndex: number | null
+
+  // Chain shape editing
+  isChainEditMode: boolean
+  chainControlPoints: THREE.Vector3[]
+  chainHeight: number  // Dynamic chain height based on bead sizes
 
   // Bead catalog
   beadCatalog: Bead[]
@@ -34,6 +41,13 @@ interface EditorState {
     color?: string | null
   }) => void
 
+  setChainStyle: (style: string) => void
+
+  // Chain shape editing
+  toggleChainEditMode: () => void
+  updateControlPoint: (index: number, position: THREE.Vector3) => void
+  resetChainShape: () => void
+
   undo: () => void
   redo: () => void
 
@@ -46,8 +60,28 @@ const DEFAULT_CHAIN: ChainStructure = {
     length: 200,
     maxBeads: 50,
     slotSpacing: 4,
+    chainStyle: 'simple',
   },
   beads: [],
+}
+
+// 创建默认的椭圆形控制点（平放在桌面上）
+// 链条高度应该和珠子中心高度一致
+const createDefaultControlPoints = (height: number): THREE.Vector3[] => {
+  const points: THREE.Vector3[] = []
+  const numPoints = 12 // 12个控制点
+  const radiusX = 2.0  // X 轴半径
+  const radiusZ = 2.5  // Z 轴半径（深度方向）
+
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2
+    const x = Math.cos(angle) * radiusX      // 左右方向
+    const y = height                          // 高度（和珠子中心一致）
+    const z = Math.sin(angle) * radiusZ      // 前后方向
+    points.push(new THREE.Vector3(x, y, z))
+  }
+
+  return points
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -56,6 +90,9 @@ export const useEditorStore = create<EditorState>()(
       // Initial state
       chainStructure: DEFAULT_CHAIN,
       selectedBeadIndex: null,
+      isChainEditMode: false,
+      chainHeight: 0.21, // Default height (largest bead is 0.2, + 0.01 margin)
+      chainControlPoints: createDefaultControlPoints(0.21),
       beadCatalog: [],
       filteredBeads: [],
       materialFilter: null,
@@ -173,7 +210,21 @@ export const useEditorStore = create<EditorState>()(
 
       // Set bead catalog
       setBeadCatalog: (beads) => {
-        set({ beadCatalog: beads, filteredBeads: beads })
+        // Calculate new chain height based on largest bead
+        const newChainHeight = calculateChainHeight(beads)
+
+        // Update control points with new height
+        const { chainControlPoints } = get()
+        const updatedControlPoints = chainControlPoints.map(
+          (point) => new THREE.Vector3(point.x, newChainHeight, point.z)
+        )
+
+        set({
+          beadCatalog: beads,
+          filteredBeads: beads,
+          chainHeight: newChainHeight,
+          chainControlPoints: updatedControlPoints,
+        })
       },
 
       // Set filters
@@ -230,14 +281,57 @@ export const useEditorStore = create<EditorState>()(
         }
       },
 
+      // Set chain style
+      setChainStyle: (style) => {
+        const { chainStructure, history, historyIndex } = get()
+
+        const newStructure: ChainStructure = {
+          ...chainStructure,
+          chainMeta: {
+            ...chainStructure.chainMeta,
+            chainStyle: style as any,
+          },
+        }
+
+        const newHistory = history.slice(0, historyIndex + 1)
+        newHistory.push(newStructure)
+
+        set({
+          chainStructure: newStructure,
+          history: newHistory,
+          historyIndex: newHistory.length - 1,
+        })
+      },
+
+      // Toggle chain edit mode
+      toggleChainEditMode: () => {
+        set((state) => ({ isChainEditMode: !state.isChainEditMode }))
+      },
+
+      // Update control point position
+      updateControlPoint: (index, position) => {
+        const { chainControlPoints } = get()
+        const newPoints = [...chainControlPoints]
+        newPoints[index] = position.clone()
+        set({ chainControlPoints: newPoints })
+      },
+
+      // Reset chain shape to default ellipse
+      resetChainShape: () => {
+        const { chainHeight } = get()
+        set({ chainControlPoints: createDefaultControlPoints(chainHeight) })
+      },
+
       // Reset chain
       resetChain: () => {
+        const { chainHeight } = get()
         const newHistory = [DEFAULT_CHAIN]
         set({
           chainStructure: DEFAULT_CHAIN,
           history: newHistory,
           historyIndex: 0,
           selectedBeadIndex: null,
+          chainControlPoints: createDefaultControlPoints(chainHeight),
         })
       },
     }),

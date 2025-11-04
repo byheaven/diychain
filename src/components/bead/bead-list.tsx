@@ -3,6 +3,7 @@
 import { useEditorStore } from "@/lib/store"
 import { BeadCard } from "./bead-card"
 import { BeadFilterBar } from "./bead-filter-bar"
+import { ChainStyleSelector } from "../editor/chain-style-selector"
 
 export function BeadList() {
   const { filteredBeads } = useEditorStore()
@@ -14,6 +15,9 @@ export function BeadList() {
         <h2 className="text-lg font-semibold">水晶珠库</h2>
         <p className="text-sm text-muted-foreground">拖动珠子到链条上</p>
       </div>
+
+      {/* Chain Style Selector */}
+      <ChainStyleSelector />
 
       {/* Filters */}
       <BeadFilterBar />

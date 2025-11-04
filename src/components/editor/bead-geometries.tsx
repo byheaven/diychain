@@ -21,7 +21,13 @@ export function createHeartShape() {
     bevelThickness: 0.02,
   }
 
-  return new THREE.ExtrudeGeometry(shape, extrudeSettings)
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+
+  // Center the geometry so the chain passes through the middle
+  // ExtrudeGeometry extrudes from Z=0 to Z=depth, so we translate by -depth/2
+  geometry.translate(0, 0, -extrudeSettings.depth / 2)
+
+  return geometry
 }
 
 // Create a star shape geometry
@@ -54,5 +60,11 @@ export function createStarShape() {
     bevelThickness: 0.01,
   }
 
-  return new THREE.ExtrudeGeometry(shape, extrudeSettings)
+  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings)
+
+  // Center the geometry so the chain passes through the middle
+  // ExtrudeGeometry extrudes from Z=0 to Z=depth, so we translate by -depth/2
+  geometry.translate(0, 0, -extrudeSettings.depth / 2)
+
+  return geometry
 }
