@@ -25,7 +25,10 @@ export function DraggableControlPoint({
     if (!isEditing) return
     e.stopPropagation()
     setIsDragging(true)
-    ;(e.target as any).setPointerCapture(e.pointerId)
+    const target = e.target as unknown as Element
+    if ('setPointerCapture' in target) {
+      target.setPointerCapture(e.pointerId)
+    }
   }
 
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
@@ -46,7 +49,10 @@ export function DraggableControlPoint({
     if (!isDragging) return
     e.stopPropagation()
     setIsDragging(false)
-    ;(e.target as any).releasePointerCapture(e.pointerId)
+    const target = e.target as unknown as Element
+    if ('releasePointerCapture' in target) {
+      target.releasePointerCapture(e.pointerId)
+    }
   }
 
   if (!isEditing) return null

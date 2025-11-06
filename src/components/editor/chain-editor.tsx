@@ -1,7 +1,6 @@
 "use client"
 
 import { useRef, useMemo } from "react"
-import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { useEditorStore } from "@/lib/store"
 import { BeadMesh } from "./bead-mesh"
@@ -91,6 +90,23 @@ export function ChainEditor() {
   )
 }
 
+// Create an oval curve for each link
+function createOvalLinkCurve() {
+  const points = []
+  const linkLength = 0.08  // Length of the oval
+  const linkWidth = 0.04   // Width of the oval
+
+  // Create oval shape
+  for (let i = 0; i <= 32; i++) {
+    const t = (i / 32) * Math.PI * 2
+    const x = Math.cos(t) * linkLength
+    const y = Math.sin(t) * linkWidth
+    points.push(new THREE.Vector3(x, y, 0))
+  }
+
+  return new THREE.CatmullRomCurve3(points, true)
+}
+
 function ChainWire({ positions }: { positions: THREE.Vector3[] }) {
   const { chainStructure } = useEditorStore()
   const chainStyle = chainStructure.chainMeta.chainStyle || 'simple'
@@ -99,6 +115,9 @@ function ChainWire({ positions }: { positions: THREE.Vector3[] }) {
     // Create a closed curve for necklace
     return new THREE.CatmullRomCurve3(positions, true) // true = closed curve
   }, [positions])
+
+  // Pre-compute oval link curve for link style
+  const ovalLinkCurve = useMemo(() => createOvalLinkCurve(), [])
 
   // Render different chain styles
   switch (chainStyle) {
@@ -146,25 +165,6 @@ function ChainWire({ positions }: { positions: THREE.Vector3[] }) {
     case 'link':
       // Chain links - oval links that interlock (realistic chain)
       const linkCount = 20 // Reduced for proper interlocking
-
-      // Create an oval curve for each link
-      const createOvalLinkCurve = () => {
-        const points = []
-        const linkLength = 0.08  // Length of the oval
-        const linkWidth = 0.04   // Width of the oval
-
-        // Create oval shape
-        for (let i = 0; i <= 32; i++) {
-          const t = (i / 32) * Math.PI * 2
-          const x = Math.cos(t) * linkLength
-          const y = Math.sin(t) * linkWidth
-          points.push(new THREE.Vector3(x, y, 0))
-        }
-
-        return new THREE.CatmullRomCurve3(points, true)
-      }
-
-      const ovalLinkCurve = useMemo(() => createOvalLinkCurve(), [])
 
       return (
         <group>

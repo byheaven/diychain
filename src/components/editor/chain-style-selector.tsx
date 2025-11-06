@@ -1,7 +1,6 @@
 "use client"
 
 import { useEditorStore } from "@/lib/store"
-import { Button } from "@/components/ui/button"
 import { Link2, Edit3, Check } from "lucide-react"
 
 const CHAIN_STYLES = [

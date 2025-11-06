@@ -289,7 +289,7 @@ export const useEditorStore = create<EditorState>()(
           ...chainStructure,
           chainMeta: {
             ...chainStructure.chainMeta,
-            chainStyle: style as any,
+            chainStyle: style,
           },
         }
 
