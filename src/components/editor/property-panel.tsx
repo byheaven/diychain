@@ -13,10 +13,23 @@ export function PropertyPanel() {
     selectBead,
   } = useEditorStore()
 
-  const selectedBead =
-    selectedBeadIndex !== null
-      ? chainStructure.beads.find((b) => b.positionIndex === selectedBeadIndex)
-      : null
+  // Early return if no bead is selected
+  if (selectedBeadIndex === null) {
+    return (
+      <div className="flex flex-col h-full border-l bg-card">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">属性面板</h2>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
+          <p>选择一个珠子<br />以查看和编辑其属性</p>
+        </div>
+      </div>
+    )
+  }
+
+  const selectedBead = chainStructure.beads.find(
+    (b) => b.positionIndex === selectedBeadIndex
+  )
 
   if (!selectedBead) {
     return (
