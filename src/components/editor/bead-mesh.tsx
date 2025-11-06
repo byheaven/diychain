@@ -43,7 +43,7 @@ export function BeadMesh({ bead, position, index, outwardAngle = 0 }: BeadMeshPr
   }, [bead, beadData])
 
   // Hover and selection effects
-  useFrame((state) => {
+  useFrame(() => {
     if (meshRef.current) {
       const targetScale = (hovered ? 1.1 : 1) * (isSelected ? 1.15 : 1) * bead.scale
       meshRef.current.scale.lerp(
@@ -56,30 +56,6 @@ export function BeadMesh({ bead, position, index, outwardAngle = 0 }: BeadMeshPr
   // Create custom geometries
   const heartGeometry = reactUseMemo(() => createHeartShape(), [])
   const starGeometry = reactUseMemo(() => createStarShape(), [])
-
-  // Calculate bead "radius" (distance from center to bottom) for each shape
-  const getBeadRadius = (): number => {
-    const shape = beadData?.shape || 'sphere'
-    const size = 0.2
-
-    switch (shape) {
-      case 'sphere':
-        return size // 0.2
-      case 'cube':
-        return (size * 1.8) / 2 // 0.18
-      case 'cylinder':
-        // When laying flat, the radius determines the height
-        return size * 0.8 // 0.16
-      case 'heart':
-        return 0.05 // Half of extrude depth
-      case 'star':
-        return 0.04 // Half of extrude depth
-      case 'flower':
-        return size // 0.2
-      default:
-        return size
-    }
-  }
 
   // Get geometry based on shape (adjusted for laying flat on desktop)
   const getGeometry = () => {
