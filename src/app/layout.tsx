@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+// Temporarily disabled Google Fonts due to network issues
+// import { Inter } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+// const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "DIY Chain - 3D手机挂饰链定制",
@@ -16,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className={inter.className}>{children}</body>
+      <body className="font-sans">{children}</body>
     </html>
   )
 }
