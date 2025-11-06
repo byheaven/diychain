@@ -38,7 +38,7 @@ export function Header() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
             {isDark ? (
               <Sun className="h-5 w-5" />
@@ -47,19 +47,28 @@ export function Header() {
             )}
           </Button>
 
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
             <RotateCcw className="h-4 w-4 mr-2" />
             重置
           </Button>
+          <Button variant="outline" size="icon" className="sm:hidden">
+            <RotateCcw className="h-4 w-4" />
+          </Button>
 
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
             <Save className="h-4 w-4 mr-2" />
             保存
           </Button>
+          <Button variant="outline" size="icon" className="sm:hidden">
+            <Save className="h-4 w-4" />
+          </Button>
 
-          <Button size="sm" className="bg-gradient-to-r from-candy-pink to-sky-blue">
+          <Button size="sm" className="hidden sm:inline-flex bg-gradient-to-r from-candy-pink to-sky-blue">
             <Share2 className="h-4 w-4 mr-2" />
             分享
+          </Button>
+          <Button size="icon" className="sm:hidden bg-gradient-to-r from-candy-pink to-sky-blue">
+            <Share2 className="h-4 w-4" />
           </Button>
         </div>
       </div>

@@ -16,12 +16,12 @@ export function PropertyPanel() {
   // Early return if no bead is selected
   if (selectedBeadIndex === null) {
     return (
-      <div className="flex flex-col h-full border-l bg-card">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">属性面板</h2>
+      <div className="flex flex-col h-full lg:border-l bg-card">
+        <div className="p-3 sm:p-4 border-b">
+          <h2 className="text-base sm:text-lg font-semibold">属性面板</h2>
         </div>
-        <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
-          <p>选择一个珠子<br />以查看和编辑其属性</p>
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 text-center text-muted-foreground">
+          <p className="text-sm sm:text-base">选择一个珠子<br />以查看和编辑其属性</p>
         </div>
       </div>
     )
@@ -33,28 +33,28 @@ export function PropertyPanel() {
 
   if (!selectedBead) {
     return (
-      <div className="flex flex-col h-full border-l bg-card">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">属性面板</h2>
+      <div className="flex flex-col h-full lg:border-l bg-card">
+        <div className="p-3 sm:p-4 border-b">
+          <h2 className="text-base sm:text-lg font-semibold">属性面板</h2>
         </div>
-        <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
-          <p>选择一个珠子<br />以查看和编辑其属性</p>
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8 text-center text-muted-foreground">
+          <p className="text-sm sm:text-base">选择一个珠子<br />以查看和编辑其属性</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full border-l bg-card">
+    <div className="flex flex-col h-full lg:border-l bg-card">
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-3 sm:p-4 border-b">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">属性面板</h2>
+          <h2 className="text-base sm:text-lg font-semibold">属性面板</h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => selectBead(null)}
-            className="h-8 w-8"
+            className="h-8 w-8 text-xl"
           >
             ×
           </Button>
@@ -62,7 +62,7 @@ export function PropertyPanel() {
       </div>
 
       {/* Properties */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
         {/* Scale */}
         <div>
           <label className="text-sm font-medium block mb-2">
@@ -147,10 +147,10 @@ export function PropertyPanel() {
       </div>
 
       {/* Actions */}
-      <div className="p-4 border-t">
+      <div className="p-3 sm:p-4 border-t">
         <Button
           variant="destructive"
-          className="w-full"
+          className="w-full h-10 sm:h-auto"
           onClick={() => {
             removeBeadFromChain(selectedBeadIndex)
             selectBead(null)
