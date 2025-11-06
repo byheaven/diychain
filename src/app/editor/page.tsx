@@ -6,9 +6,12 @@ import { BeadList } from "@/components/bead/bead-list"
 import { Canvas3D } from "@/components/editor/canvas-3d"
 import { PropertyPanel } from "@/components/editor/property-panel"
 import { EditorControls } from "@/components/editor/editor-controls"
+import { BottomSheet } from "@/components/ui/bottom-sheet"
+import { MobileBeadPicker } from "@/components/editor/mobile-bead-picker"
+import { ChainListView } from "@/components/editor/chain-list-view"
 import { useEditorStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
-import { Palette, Box, Settings } from "lucide-react"
+import { Plus, List, Settings } from "lucide-react"
 import type { Bead } from "@/types"
 
 // Mock bead data
@@ -111,12 +114,12 @@ const MOCK_BEADS: Bead[] = [
   },
 ]
 
-type MobilePanel = "beads" | "canvas" | "properties"
+type SheetType = "beads" | "chain" | "properties" | null
 
 export default function EditorPage() {
-  const { setBeadCatalog, addBeadToChain, chainStructure } = useEditorStore()
+  const { setBeadCatalog, addBeadToChain, chainStructure, selectedBeadIndex } = useEditorStore()
   const [mounted, setMounted] = useState(false)
-  const [mobilePanel, setMobilePanel] = useState<MobilePanel>("canvas")
+  const [activeSheet, setActiveSheet] = useState<SheetType>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -140,6 +143,12 @@ export default function EditorPage() {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.dataTransfer.dropEffect = "copy"
+  }
+
+  const handleBeadSelect = (bead: Bead) => {
+    const nextPosition = chainStructure.beads.length
+    addBeadToChain(bead, nextPosition)
+    setActiveSheet(null) // Close the sheet after adding bead
   }
 
   if (!mounted) {
@@ -185,78 +194,89 @@ export default function EditorPage() {
         </div>
       </div>
 
-      {/* Mobile/Tablet Layout: Single panel with bottom navigation */}
+      {/* Mobile Layout: Full screen canvas with bottom action bar */}
       <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden relative">
-          {/* Bead Library Panel */}
-          <div className={`absolute inset-0 ${mobilePanel === "beads" ? "block" : "hidden"}`}>
-            <BeadList />
-          </div>
+        {/* 3D Canvas - Takes most of the screen */}
+        <div className="flex-1 relative">
+          <Canvas3D />
+          <EditorControls />
 
-          {/* Canvas Panel */}
-          <div
-            className={`absolute inset-0 ${mobilePanel === "canvas" ? "block" : "hidden"}`}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          >
-            <Canvas3D />
-            <EditorControls />
-
-            {/* Drop Zone Hint */}
-            {chainStructure.beads.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center p-4 mx-4 rounded-lg bg-background/80 backdrop-blur-sm border-2 border-dashed border-muted-foreground/30">
-                  <p className="text-base font-medium">点击&ldquo;珠子库&rdquo;选择珠子</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    然后添加到链条中
-                  </p>
-                </div>
+          {/* Empty State Hint */}
+          {chainStructure.beads.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+              <div className="text-center p-6 rounded-lg bg-background/90 backdrop-blur-sm border-2 border-dashed border-muted-foreground/30 max-w-sm">
+                <p className="text-base font-medium">欢迎来到 DIY Chain</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  点击下方&ldquo;添加珠子&rdquo;按钮开始创作
+                </p>
               </div>
-            )}
-          </div>
-
-          {/* Properties Panel */}
-          <div className={`absolute inset-0 ${mobilePanel === "properties" ? "block" : "hidden"}`}>
-            <PropertyPanel />
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Bottom Navigation Bar */}
-        <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
+        {/* Bottom Action Bar */}
+        <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-bottom">
+          <div className="flex items-center justify-around p-3 gap-2 max-w-md mx-auto">
             <Button
-              variant={mobilePanel === "beads" ? "default" : "ghost"}
-              size="sm"
-              className="flex-1 flex-col h-auto py-2 gap-1"
-              onClick={() => setMobilePanel("beads")}
+              variant="default"
+              size="lg"
+              className="flex-1 gap-2 bg-gradient-to-r from-candy-pink to-sky-blue"
+              onClick={() => setActiveSheet("beads")}
             >
-              <Palette className="h-5 w-5" />
-              <span className="text-xs">珠子库</span>
+              <Plus className="h-5 w-5" />
+              添加珠子
             </Button>
 
             <Button
-              variant={mobilePanel === "canvas" ? "default" : "ghost"}
-              size="sm"
-              className="flex-1 flex-col h-auto py-2 gap-1"
-              onClick={() => setMobilePanel("canvas")}
+              variant="outline"
+              size="lg"
+              className="flex-1 gap-2"
+              onClick={() => setActiveSheet("chain")}
             >
-              <Box className="h-5 w-5" />
-              <span className="text-xs">编辑</span>
+              <List className="h-5 w-5" />
+              链条 ({chainStructure.beads.length})
             </Button>
 
-            <Button
-              variant={mobilePanel === "properties" ? "default" : "ghost"}
-              size="sm"
-              className="flex-1 flex-col h-auto py-2 gap-1"
-              onClick={() => setMobilePanel("properties")}
-            >
-              <Settings className="h-5 w-5" />
-              <span className="text-xs">属性</span>
-            </Button>
+            {selectedBeadIndex !== null && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="flex-shrink-0 h-11 w-11"
+                onClick={() => setActiveSheet("properties")}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Bottom Sheets for Mobile */}
+      <BottomSheet
+        isOpen={activeSheet === "beads"}
+        onClose={() => setActiveSheet(null)}
+        title="选择珠子"
+      >
+        <MobileBeadPicker onBeadSelect={handleBeadSelect} />
+      </BottomSheet>
+
+      <BottomSheet
+        isOpen={activeSheet === "chain"}
+        onClose={() => setActiveSheet(null)}
+        title="链条编辑"
+      >
+        <ChainListView />
+      </BottomSheet>
+
+      <BottomSheet
+        isOpen={activeSheet === "properties"}
+        onClose={() => setActiveSheet(null)}
+        title="珠子属性"
+      >
+        <div className="p-4">
+          <PropertyPanel />
+        </div>
+      </BottomSheet>
     </div>
   )
 }
