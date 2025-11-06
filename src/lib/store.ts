@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Bead, BeadInChain, ChainStructure } from '@/types'
+import type { Bead, BeadInChain, ChainStructure, ChainStyle } from '@/types'
 import * as THREE from 'three'
 import { calculateChainHeight } from './bead-utils'
 
@@ -41,7 +41,7 @@ interface EditorState {
     color?: string | null
   }) => void
 
-  setChainStyle: (style: string) => void
+  setChainStyle: (style: ChainStyle) => void
 
   // Chain shape editing
   toggleChainEditMode: () => void
