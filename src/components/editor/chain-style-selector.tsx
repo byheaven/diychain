@@ -2,8 +2,14 @@
 
 import { useEditorStore } from "@/lib/store"
 import { Link2, Edit3, Check } from "lucide-react"
+import type { ChainStyle } from "@/types"
 
-const CHAIN_STYLES = [
+const CHAIN_STYLES: Array<{
+  id: ChainStyle
+  name: string
+  icon: string
+  description: string
+}> = [
   {
     id: 'simple',
     name: '简单链',
@@ -22,19 +28,7 @@ const CHAIN_STYLES = [
     icon: '⛓️',
     description: '环环相扣',
   },
-  {
-    id: 'rope',
-    name: '绳索链',
-    icon: '🧵',
-    description: '螺旋纹理',
-  },
-  {
-    id: 'snake',
-    name: '蛇骨链',
-    icon: '🐍',
-    description: '蛇骨纹理',
-  },
-]
+] as const
 
 export function ChainStyleSelector() {
   const { chainStructure, setChainStyle, isChainEditMode, toggleChainEditMode, resetChainShape } = useEditorStore()
