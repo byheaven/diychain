@@ -55,6 +55,12 @@ export function BeadCard({ bead }: BeadCardProps) {
           style: baseStyle,
           content: '🌸',
         }
+      case 'spline':
+        return {
+          className: 'w-16 h-16',
+          style: baseStyle,
+          content: '✨',
+        }
       default:
         return {
           className: 'w-16 h-16 rounded-full',

@@ -18,6 +18,8 @@ export function getBeadRadius(shape: BeadShape): number {
       return 0.04 // Half of extrude depth
     case 'flower':
       return size // 0.2
+    case 'spline':
+      return size * 1.2 // 0.24 - slightly larger for Spline models
     default:
       return size
   }

@@ -9,6 +9,7 @@ import { EditorControls } from "@/components/editor/editor-controls"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
 import { MobileBeadPicker } from "@/components/editor/mobile-bead-picker"
 import { ChainListView } from "@/components/editor/chain-list-view"
+import { MaterialDebugger } from "@/components/dev/material-debugger"
 import { useEditorStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Plus, List, Settings } from "lucide-react"
@@ -109,6 +110,46 @@ const MOCK_BEADS: Bead[] = [
     sizeMm: 8,
     weightG: 0.4,
     priceCents: 400,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "9",
+    name: "Flow 流动珠",
+    material: "glass",
+    shape: "spline",
+    baseColor: "#FF6DAF",
+    sizeMm: 12,
+    weightG: 0.6,
+    splineUrl: "/models/flow_4.glb",
+    materialConfig: {
+      presetType: "glass",
+      transmission: 0.95,
+      ior: 1.5,
+      roughness: 0.05,
+      preserveColor: false,
+    },
+    priceCents: 1000,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "10",
+    name: "复古钥匙",
+    material: "metal-gold",
+    shape: "spline",
+    baseColor: "#C9B037",
+    sizeMm: 15,
+    weightG: 1.2,
+    splineUrl: "/models/key.glb",
+    materialConfig: {
+      presetType: "metal",
+      metalness: 1.0,
+      roughness: 0.3,
+      envMapIntensity: 2.0,
+      preserveColor: true,  // 保留 GLB 中的原始金色
+    },
+    priceCents: 1500,
     isActive: true,
     createdAt: new Date().toISOString(),
   },
@@ -277,6 +318,9 @@ export default function EditorPage() {
           <PropertyPanel />
         </div>
       </BottomSheet>
+
+      {/* Material Debugger - Development Only */}
+      {process.env.NODE_ENV === 'development' && <MaterialDebugger />}
     </div>
   )
 }

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "spline-1",
+    "name": "Flow 4",
+    "material": "glass",
+    "shape": "spline",
+    "baseColor": "#63B3FF",
+    "sizeMm": 12,
+    "weightG": 0.6,
+    "splineUrl": "/models/flow_4.glb",
+    "materialConfig": {
+      "presetType": "glass",
+      "transmission": 0.95,
+      "ior": 1.5
+    },
+    "priceCents": 1000,
+    "isActive": true
+  },
+  {
+    "id": "spline-2",
+    "name": "Key",
+    "material": "glass",
+    "shape": "spline",
+    "baseColor": "#63B3FF",
+    "sizeMm": 12,
+    "weightG": 0.6,
+    "splineUrl": "/models/key.glb",
+    "materialConfig": {
+      "presetType": "glass",
+      "transmission": 0.95,
+      "ior": 1.5
+    },
+    "priceCents": 1000,
+    "isActive": true
+  }
+]

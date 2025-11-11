@@ -3,9 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { Moon, Sun, Save, Share2, RotateCcw } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useEditorStore } from "@/lib/store"
 
 export function Header() {
   const [isDark, setIsDark] = useState(false)
+  const { resetChain } = useEditorStore()
 
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains("dark")
@@ -22,6 +24,12 @@ export function Header() {
     } else {
       document.documentElement.classList.remove("dark")
       localStorage.setItem("theme", "light")
+    }
+  }
+
+  const handleReset = () => {
+    if (window.confirm('确定要重置所有珠子吗？此操作无法撤销。')) {
+      resetChain()
     }
   }
 
@@ -47,11 +55,11 @@ export function Header() {
             )}
           </Button>
 
-          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+          <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-2" />
             重置
           </Button>
-          <Button variant="outline" size="icon" className="sm:hidden">
+          <Button variant="outline" size="icon" className="sm:hidden" onClick={handleReset}>
             <RotateCcw className="h-4 w-4" />
           </Button>
 

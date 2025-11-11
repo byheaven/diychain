@@ -6,15 +6,17 @@ import * as THREE from "three"
 import { useEditorStore } from "@/lib/store"
 import type { BeadInChain } from "@/types"
 import { createHeartShape, createStarShape } from "./bead-geometries"
+import { SplineBeadMesh } from "./spline-bead-mesh"
 
 interface BeadMeshProps {
   bead: BeadInChain
   position: THREE.Vector3
   index: number
   outwardAngle?: number  // Angle to face outward from center (radians)
+  tangent?: THREE.Vector3  // Curve tangent for orientation
 }
 
-export function BeadMesh({ bead, position, index, outwardAngle = 0 }: BeadMeshProps) {
+export function BeadMesh({ bead, position, index, outwardAngle = 0, tangent }: BeadMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const { selectedBeadIndex, selectBead, beadCatalog, chainHeight } = useEditorStore()
@@ -140,6 +142,19 @@ export function BeadMesh({ bead, position, index, outwardAngle = 0 }: BeadMeshPr
     return [position.x, chainHeight, position.z]
   }
 
+  // Special handling for Spline beads
+  if (beadData?.shape === 'spline' && beadData?.splineUrl) {
+    return (
+      <group position={getBeadPosition()} onClick={() => selectBead(index)}>
+        <SplineBeadMesh
+          splineUrl={beadData.splineUrl}
+          scale={bead.scale}
+          isSelected={isSelected}
+        />
+      </group>
+    )
+  }
+
   return (
     <mesh
       ref={meshRef}
@@ -148,8 +163,6 @@ export function BeadMesh({ bead, position, index, outwardAngle = 0 }: BeadMeshPr
       onClick={() => selectBead(index)}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
-      castShadow
-      receiveShadow
     >
       {getGeometry()}
       <primitive object={material} attach="material" />
@@ -171,8 +184,8 @@ export function BeadMesh({ bead, position, index, outwardAngle = 0 }: BeadMeshPr
 }
 
 // Move useMemo to top level
-function useMemo<T>(factory: () => T, deps: React.DependencyList): T {
-  const ref = useRef<{ value: T; deps: React.DependencyList }>()
+function useMemo<T>(factory: () => T, deps: React.DependencyList = []): T {
+  const ref = useRef<{ value: T; deps: React.DependencyList } | undefined>(undefined)
 
   if (
     !ref.current ||

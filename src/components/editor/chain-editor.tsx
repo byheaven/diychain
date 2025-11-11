@@ -16,11 +16,12 @@ export function ChainEditor() {
     chainHeight
   } = useEditorStore()
 
-  // Generate slot positions and rotations from control points
+  // Generate slot positions, rotations and tangents from control points
   const slotData = useMemo(() => {
     const beadCount = chainStructure.beads.length
     const positions: THREE.Vector3[] = []
     const rotations: number[] = [] // Angle in radians (rotation around Y axis)
+    const tangents: THREE.Vector3[] = [] // Curve tangent at each position
 
     // If no beads, create preview slots
     const totalSlots = beadCount > 0 ? beadCount : 16
@@ -32,7 +33,10 @@ export function ChainEditor() {
     for (let i = 0; i < totalSlots; i++) {
       const t = i / totalSlots
       const point = curve.getPointAt(t)
+      const tangent = curve.getTangentAt(t)
+      
       positions.push(point)
+      tangents.push(tangent)
 
       // Calculate rotation to face outward from center
       // In XZ plane, the outward direction is from (0,0,0) to (x,z)
@@ -40,7 +44,7 @@ export function ChainEditor() {
       rotations.push(angle)
     }
 
-    return { positions, rotations }
+    return { positions, rotations, tangents }
   }, [chainStructure.beads.length, chainControlPoints])
 
   // 禁用旋转动画（链条平放在桌面上）
@@ -76,6 +80,7 @@ export function ChainEditor() {
         // Use array index for positioning to ensure proper spacing
         const position = slotData.positions[arrayIndex] || new THREE.Vector3(0, 0, 0)
         const outwardAngle = slotData.rotations[arrayIndex] || 0
+        const tangent = slotData.tangents[arrayIndex] || new THREE.Vector3(0, 1, 0)
         return (
           <BeadMesh
             key={`${bead.catalogId}-${bead.positionIndex}-${arrayIndex}`}
@@ -83,6 +88,7 @@ export function ChainEditor() {
             position={position}
             index={bead.positionIndex}
             outwardAngle={outwardAngle}
+            tangent={tangent}
           />
         )
       })}
