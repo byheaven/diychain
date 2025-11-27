@@ -52,6 +52,10 @@ interface EditorState {
   redo: () => void
 
   resetChain: () => void
+
+  // Game Reward
+  isRewardUnlocked: boolean
+  unlockReward: () => void
 }
 
 const DEFAULT_CHAIN: ChainStructure = {
@@ -100,6 +104,8 @@ export const useEditorStore = create<EditorState>()(
       colorFilter: null,
       history: [DEFAULT_CHAIN],
       historyIndex: 0,
+
+      isRewardUnlocked: false,
 
       // Add bead to chain
       addBeadToChain: (bead, positionIndex) => {
@@ -334,6 +340,10 @@ export const useEditorStore = create<EditorState>()(
           chainControlPoints: createDefaultControlPoints(chainHeight),
         })
       },
+
+      unlockReward: () => {
+        set({ isRewardUnlocked: true })
+      },
     }),
     {
       name: 'diychain-editor',
@@ -341,6 +351,7 @@ export const useEditorStore = create<EditorState>()(
         chainStructure: state.chainStructure,
         history: state.history,
         historyIndex: state.historyIndex,
+        isRewardUnlocked: state.isRewardUnlocked,
       }),
     }
   )

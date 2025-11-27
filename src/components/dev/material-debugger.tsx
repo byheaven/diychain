@@ -11,16 +11,21 @@
  * {process.env.NODE_ENV === 'development' && <MaterialDebugger />}
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useEditorStore } from '@/lib/store'
-import { getMaterialDebugInfo, MATERIAL_PRESETS } from '@/lib/spline-material-mapper'
-import type { MaterialPresetType } from '@/lib/spline-material-mapper'
+import { MATERIAL_PRESETS } from '@/lib/spline-material-mapper'
+
+interface DebugInfoItem {
+  name: string
+  config: unknown
+  baseColor: string | undefined
+}
 
 interface MaterialInfo {
   beadId: string
   beadName: string
   materialType: string
-  debugInfo: any[]
+  debugInfo: DebugInfoItem[]
 }
 
 export function MaterialDebugger() {
@@ -42,7 +47,7 @@ export function MaterialDebugger() {
   }, [])
 
   // 刷新材质信息（这里是简化版，实际需要通过Three.js scene访问）
-  const refreshMaterials = () => {
+  const refreshMaterials = useCallback(() => {
     // 注意：这里我们只显示catalog中的配置
     // 实际的Three.js材质需要通过ref或其他方式访问
     const info: MaterialInfo[] = beadCatalog
@@ -61,13 +66,13 @@ export function MaterialDebugger() {
       }))
 
     setMaterials(info)
-  }
+  }, [beadCatalog])
 
   useEffect(() => {
     if (isOpen) {
       refreshMaterials()
     }
-  }, [isOpen, beadCatalog])
+  }, [isOpen, refreshMaterials])
 
   if (!isOpen) {
     return (
@@ -145,7 +150,7 @@ export function MaterialDebugger() {
             {materials.length === 0 ? (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-700 rounded-lg p-4 text-center">
                 <p className="text-yellow-800 dark:text-yellow-300">
-                  没有找到Spline珠子。请确保catalog中有shape为'spline'的珠子。
+                  没有找到Spline珠子。请确保catalog中有shape为&apos;spline&apos;的珠子。
                 </p>
               </div>
             ) : (

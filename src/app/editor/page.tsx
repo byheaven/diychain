@@ -153,19 +153,38 @@ const MOCK_BEADS: Bead[] = [
     isActive: true,
     createdAt: new Date().toISOString(),
   },
+  {
+    id: "limited-star",
+    name: "限定星光珠",
+    material: "crystal",
+    shape: "star",
+    baseColor: "#FF1493", // Deep Pink
+    sizeMm: 12,
+    weightG: 1.0,
+    priceCents: 9999, // Priceless/High value
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
 ]
 
 type SheetType = "beads" | "chain" | "properties" | null
 
 export default function EditorPage() {
-  const { setBeadCatalog, addBeadToChain, chainStructure, selectedBeadIndex } = useEditorStore()
+  const { setBeadCatalog, addBeadToChain, chainStructure, selectedBeadIndex, isRewardUnlocked } = useEditorStore()
   const [mounted, setMounted] = useState(false)
   const [activeSheet, setActiveSheet] = useState<SheetType>(null)
 
   useEffect(() => {
     setMounted(true)
-    setBeadCatalog(MOCK_BEADS)
-  }, [setBeadCatalog])
+    // Filter out limited beads if not unlocked
+    const visibleBeads = MOCK_BEADS.filter(bead => {
+      if (bead.id === 'limited-star') {
+        return isRewardUnlocked
+      }
+      return true
+    })
+    setBeadCatalog(visibleBeads)
+  }, [setBeadCatalog, isRewardUnlocked])
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()

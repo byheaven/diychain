@@ -320,7 +320,7 @@ export function applyMaterialConfig(
  * @param customConfig - 自定义配置（会覆盖预设）
  */
 export function enhanceSplineMaterials(
-  gltf: any,
+  gltf: { scene: THREE.Group },
   materialType: MaterialPresetType = 'default',
   baseColor?: string | THREE.Color,
   customConfig?: Partial<MaterialConfig>
@@ -332,8 +332,8 @@ export function enhanceSplineMaterials(
   const finalConfig = { ...presetConfig, ...customConfig }
 
   // 遍历场景中的所有对象
-  gltf.scene.traverse((child: any) => {
-    if (child.isMesh && child.material) {
+  gltf.scene.traverse((child: THREE.Object3D) => {
+    if (child instanceof THREE.Mesh && child.material) {
       // 处理单个材质
       if (!Array.isArray(child.material)) {
         enhanceSingleMaterial(child.material, finalConfig, baseColor)

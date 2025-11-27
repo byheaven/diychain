@@ -1,21 +1,21 @@
 "use client"
 
-import { useRef } from "react"
-import { useFrame } from "@react-three/fiber"
+import React, { useRef, useMemo, forwardRef } from "react"
 import { RigidBody, BallCollider, useSphericalJoint } from "@react-three/rapier"
 import type { RapierRigidBody } from "@react-three/rapier"
 import * as THREE from "three"
 import { useEditorStore } from "@/lib/store"
 import { BeadMesh } from "./bead-mesh"
+import type { Bead, BeadInChain } from "@/types"
 
 /**
  * HangingChain - Clean implementation with Rapier v2
  */
 export function HangingChain() {
   const { chainStructure, beadCatalog } = useEditorStore()
-  
+
   const beadCount = chainStructure.beads.length
-  
+
   // Anchor positions
   const leftAnchor: [number, number, number] = [-2.5, 3, 0]
   const rightAnchor: [number, number, number] = [2.5, 3, 0]
@@ -56,7 +56,7 @@ function EmptyChain({
       <AnchorMarker position={leftAnchor} />
       <AnchorMarker position={rightAnchor} />
       <mesh>
-        <tubeGeometry 
+        <tubeGeometry
           args={[
             new THREE.LineCurve3(
               new THREE.Vector3(...leftAnchor),
@@ -66,7 +66,7 @@ function EmptyChain({
             0.02,
             8,
             false
-          ]} 
+          ]}
         />
         <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.3} />
       </mesh>
@@ -87,6 +87,64 @@ function AnchorMarker({ position }: { position: [number, number, number] }) {
 }
 
 /**
+ * Joint component to connect two bodies
+ */
+const ChainJoint = ({
+  bodyA,
+  bodyB,
+  anchorA,
+  anchorB,
+}: {
+  bodyA: React.RefObject<RapierRigidBody>
+  bodyB: React.RefObject<RapierRigidBody>
+  anchorA: [number, number, number]
+  anchorB: [number, number, number]
+}) => {
+  useSphericalJoint(bodyA, bodyB, [anchorA, anchorB])
+  return null
+}
+
+/**
+ * Single Physics Bead Component
+ */
+const PhysicsBead = forwardRef<RapierRigidBody, {
+  bead: BeadInChain
+  index: number
+  beadCatalog: Bead[]
+  initialPosition: [number, number, number]
+}>(({ bead, index, beadCatalog, initialPosition }, ref) => {
+  const beadData = beadCatalog.find((b) => b.id === bead.catalogId)
+
+  // Use 0.2 as base radius to match BeadMesh visual size
+  // BeadMesh uses size=0.2 for geometry radius
+  const beadRadius = 0.2 * (bead.scale || 1.0)
+
+  const beadMass = Math.max((beadData?.weightG || 1.0) / 1000, 0.01)
+
+  return (
+    <RigidBody
+      ref={ref}
+      type="dynamic"
+      position={initialPosition}
+      mass={beadMass}
+      linearDamping={2.0}
+      angularDamping={2.0}
+      canSleep={false}
+      colliders={false} // We add collider manually
+    >
+      <BallCollider args={[beadRadius]} />
+      <BeadMesh
+        bead={bead}
+        position={new THREE.Vector3(0, 0, 0)}
+        index={index}
+        useChainHeight={false}
+      />
+    </RigidBody>
+  )
+})
+PhysicsBead.displayName = "PhysicsBead"
+
+/**
  * Connected beads with physics
  */
 function ConnectedBeads({
@@ -95,20 +153,24 @@ function ConnectedBeads({
   leftAnchor,
   rightAnchor,
 }: {
-  beads: any[]
-  beadCatalog: any[]
+  beads: BeadInChain[]
+  beadCatalog: Bead[]
   leftAnchor: [number, number, number]
   rightAnchor: [number, number, number]
 }) {
   const leftAnchorRef = useRef<RapierRigidBody>(null!)
   const rightAnchorRef = useRef<RapierRigidBody>(null!)
-  const beadRefs = useRef<RapierRigidBody[]>([])
 
-  const beadCount = beads.length
+  // Create stable refs for all beads
+  // We use useMemo to ensure the array of refs remains stable unless bead count changes
+  const beadRefs = useMemo(() =>
+    Array(beads.length).fill(0).map(() => React.createRef<RapierRigidBody>()),
+    [beads.length]
+  )
 
   // Get initial position
   const getInitialPosition = (index: number): [number, number, number] => {
-    const t = index / Math.max(beadCount - 1, 1)
+    const t = index / Math.max(beads.length - 1, 1)
     const x = THREE.MathUtils.lerp(leftAnchor[0], rightAnchor[0], t)
     const y = 2.5 - Math.sin(t * Math.PI) * 0.8
     return [x, y, 0]
@@ -118,113 +180,66 @@ function ConnectedBeads({
     <group>
       {/* Fixed anchors (physics bodies) */}
       <RigidBody ref={leftAnchorRef} type="fixed" position={leftAnchor}>
-        <BallCollider args={[0.05]} sensor />
+        <BallCollider args={[0.1]} sensor />
       </RigidBody>
       <RigidBody ref={rightAnchorRef} type="fixed" position={rightAnchor}>
-        <BallCollider args={[0.05]} sensor />
+        <BallCollider args={[0.1]} sensor />
       </RigidBody>
 
-      {/* Beads with joints */}
+      {/* Beads */}
       {beads.map((bead, index) => (
-        <ConnectedBead
+        <PhysicsBead
           key={`bead-${bead.catalogId}-${index}`}
+          ref={beadRefs[index]}
           bead={bead}
           index={index}
-          beadCount={beadCount}
           beadCatalog={beadCatalog}
           initialPosition={getInitialPosition(index)}
-          beadRefs={beadRefs}
-          leftAnchorRef={leftAnchorRef}
-          rightAnchorRef={rightAnchorRef}
         />
       ))}
+
+      {/* Joints */}
+      {beads.length > 0 && (
+        <>
+          {/* Left Anchor -> First Bead */}
+          {/* Anchor Bottom (-0.1) -> Bead Top (+radius) */}
+          <ChainJoint
+            bodyA={leftAnchorRef}
+            bodyB={beadRefs[0]}
+            anchorA={[0, -0.1, 0]}
+            anchorB={[0, 0.2 * (beads[0].scale || 1.0), 0]}
+          />
+
+          {/* Bead -> Bead */}
+          {beads.map((_, index) => {
+            if (index === 0) return null
+            const prevBead = beads[index - 1]
+            const currBead = beads[index]
+
+            const prevRadius = 0.2 * (prevBead.scale || 1.0)
+            const currRadius = 0.2 * (currBead.scale || 1.0)
+
+            return (
+              <ChainJoint
+                key={`joint-${index}`}
+                bodyA={beadRefs[index - 1]}
+                bodyB={beadRefs[index]}
+                anchorA={[0, -prevRadius, 0]} // Bottom of prev
+                anchorB={[0, currRadius, 0]}  // Top of curr
+              />
+            )
+          })}
+
+          {/* Last Bead -> Right Anchor */}
+          {/* Bead Top (+radius) -> Anchor Bottom (-0.1) */}
+          <ChainJoint
+            bodyA={beadRefs[beads.length - 1]}
+            bodyB={rightAnchorRef}
+            anchorA={[0, 0.2 * (beads[beads.length - 1].scale || 1.0), 0]}
+            anchorB={[0, -0.1, 0]}
+          />
+        </>
+      )}
     </group>
   )
 }
-
-/**
- * Single bead with its joint connections
- */
-function ConnectedBead({
-  bead,
-  index,
-  beadCount,
-  beadCatalog,
-  initialPosition,
-  beadRefs,
-  leftAnchorRef,
-  rightAnchorRef,
-}: {
-  bead: any
-  index: number
-  beadCount: number
-  beadCatalog: any[]
-  initialPosition: [number, number, number]
-  beadRefs: React.MutableRefObject<RapierRigidBody[]>
-  leftAnchorRef: React.RefObject<RapierRigidBody>
-  rightAnchorRef: React.RefObject<RapierRigidBody>
-}) {
-  const beadRef = useRef<RapierRigidBody>(null!)
-  
-  const beadData = beadCatalog.find((b) => b.id === bead.catalogId)
-  const beadRadius = ((beadData?.sizeMm || 12) / 1000) / 2
-  const beadMass = Math.max((beadData?.weightG || 1.0) / 1000, 0.01)
-
-  const isFirst = index === 0
-  const isLast = index === beadCount - 1
-
-  // All hooks must be called unconditionally - use far-away anchors to disable inactive joints
-  const prevRef = useRef<RapierRigidBody>(null!)
-  const farAway: [number, number, number] = [1000, 1000, 1000]
-  
-  // Connect to left anchor (first bead only)
-  useSphericalJoint(
-    leftAnchorRef, 
-    beadRef, 
-    isFirst ? [[0, -0.1, 0], [0, 0, 0]] : [farAway, farAway]
-  )
-
-  // Connect to previous bead (if not first)  
-  useSphericalJoint(
-    prevRef,
-    beadRef,
-    !isFirst && index > 0 ? [[0, -0.1, 0], [0, 0.1, 0]] : [farAway, farAway]
-  )
-
-  // Connect to right anchor (last bead only)
-  useSphericalJoint(
-    beadRef,
-    rightAnchorRef,
-    isLast ? [[0, 0, 0], [0, -0.1, 0]] : [farAway, farAway]
-  )
-  
-  // Update prevRef to point to actual previous bead
-  if (index > 0 && beadRefs.current[index - 1]) {
-    prevRef.current = beadRefs.current[index - 1]
-  }
-
-  return (
-    <RigidBody
-      ref={(el) => {
-        if (el) {
-          beadRef.current = el
-          beadRefs.current[index] = el
-        }
-      }}
-      type="dynamic"
-      position={initialPosition}
-      mass={beadMass}
-      linearDamping={2.0}
-      angularDamping={2.0}
-      canSleep={false}
-    >
-      <BallCollider args={[beadRadius]} />
-      <BeadMesh
-        bead={bead}
-        position={new THREE.Vector3(0, 0, 0)}
-        index={index}
-      />
-    </RigidBody>
-  )
-}
-

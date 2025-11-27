@@ -14,9 +14,16 @@ interface BeadMeshProps {
   index: number
   outwardAngle?: number  // Angle to face outward from center (radians)
   tangent?: THREE.Vector3  // Curve tangent for orientation
+  useChainHeight?: boolean // Whether to force Y position to chainHeight (default: true)
 }
 
-export function BeadMesh({ bead, position, index, outwardAngle = 0, tangent }: BeadMeshProps) {
+export function BeadMesh({ 
+  bead, 
+  position, 
+  index, 
+  outwardAngle = 0,
+  useChainHeight = true 
+}: BeadMeshProps) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
   const { selectedBeadIndex, selectBead, beadCatalog, chainHeight } = useEditorStore()
@@ -139,7 +146,10 @@ export function BeadMesh({ bead, position, index, outwardAngle = 0, tangent }: B
   const getBeadPosition = (): [number, number, number] => {
     // All beads' centers should be at chainHeight so the chain passes through them
     // The XZ position comes from the chain curve
-    return [position.x, chainHeight, position.z]
+    if (useChainHeight) {
+      return [position.x, chainHeight, position.z]
+    }
+    return [position.x, position.y, position.z]
   }
 
   // Special handling for Spline beads

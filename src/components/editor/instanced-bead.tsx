@@ -8,6 +8,7 @@ import {
   enhanceSplineMaterials,
   type MaterialPresetType,
 } from "@/lib/spline-material-mapper"
+import type { AdvancedMaterialConfig } from "@/types"
 
 interface InstancedBeadProps {
   glbUrl: string
@@ -16,7 +17,7 @@ interface InstancedBeadProps {
   scales: number[]
   materialPreset?: MaterialPresetType
   baseColor?: string
-  materialConfig?: any
+  materialConfig?: AdvancedMaterialConfig
 }
 
 /**
